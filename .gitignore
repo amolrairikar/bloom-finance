@@ -1,3 +1,16 @@
 # Git files
 .git
 
+# Python related items
+env/
+__pycache__
+
+# .env file with env variables
+.env
+
+# Coverage artifacts
+.coverage
+htmlcov
+
+# VSCode configurations
+.vscode
