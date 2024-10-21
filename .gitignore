@@ -14,3 +14,10 @@ htmlcov
 
 # VSCode configurations
 .vscode
+
+# SQLite database
+database.db
+
+# Credential files
+oauth_client_secret.json
+application_default_credentials.json
