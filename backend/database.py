@@ -23,7 +23,10 @@ def init_db():
                 name TEXT PRIMARY KEY,
                 last_transaction_refresh TEXT,
                 access_token TEXT,
-                refresh_token TEXT
+                refresh_token TEXT,
+                client_id TEXT,
+                client_secret TEXT,
+                token_uri TEXT
             );
 
             CREATE TABLE IF NOT EXISTS categories (
@@ -65,7 +68,8 @@ def init_db():
             VALUES (?, ?);
             '''
             ,
-            (os.environ['NAME'], current_datetime)
+            #(os.environ['NAME'], current_datetime)
+            (os.environ['NAME'], '2024-10-01 01:00:00.000')
         )
 
         conn.commit()

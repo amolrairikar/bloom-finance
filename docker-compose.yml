@@ -18,3 +18,15 @@ services:
       start_period: 10s
     env_file:
       - .env
+  #frontend:
+    #container_name: react_frontend
+    #build:
+      #context: ./frontend
+      #dockerfile: Dockerfile
+    #volumes:
+      #- TODO
+    #ports:
+      #- "3000:3000"
+    #command: TODO
+    #restart: always
+    #healthcheck: TODO

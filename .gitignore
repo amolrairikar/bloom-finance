@@ -21,3 +21,6 @@ database.db
 # Credential files
 oauth_client_secret.json
 application_default_credentials.json
+
+# Node modules
+node_modules

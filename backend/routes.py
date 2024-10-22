@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import datetime
 from typing import Optional, List, Dict
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse, HTMLResponse
@@ -48,7 +47,9 @@ def callback(request: Request, db: sqlite3.Connection = Depends(get_db_connectio
     
     # Save tokens to the SQLite database
     save_tokens(db=db, table_name='user_data',
-                access_token=credentials.token, refresh_token=credentials.refresh_token)
+                access_token=credentials.token, refresh_token=credentials.refresh_token,
+                client_id=credentials.client_id, client_secret=credentials.client_secret,
+                token_uri=credentials.token_uri)
     
     return HTMLResponse(content="<h1>OAuth flow completed successfully!</h1>")
 
@@ -83,7 +84,7 @@ def refresh_transactions(
         f'UPDATE user_data SET last_transaction_refresh = ? WHERE name=?;',
         (current_datetime, name)
     )
-    return {'message': f'{str(len(transactions))} transactions imported successfully'}
+    return {'message': f'{str(len(transactions))} transactions imported'}
 
 @router.get('/transactions/', response_model=List[Transaction])
 def get_transactions(
@@ -126,12 +127,10 @@ def get_transactions(
     if account_name:
         query = add_get_condition(query, ' AND account_name = ?', params, account_name)
 
-    return execute_get_query(
-        query=query,
-        db=db,
-        model_type=Transaction,
-        params=params
-    )
+    cursor = db.execute(query, params)
+    rows = cursor.fetchall()
+    data = [Transaction(**dict(row)) for row in rows]
+    return data
 
 @router.patch('/transactions/{transaction_id}', response_model=Transaction)
 def update_transaction(

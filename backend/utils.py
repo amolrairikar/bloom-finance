@@ -61,6 +61,56 @@ def is_email_inscope(email_timestamp: str, cutoff_datetime: str) -> bool:
     unix_datetime = datetime.datetime.fromtimestamp(int(email_timestamp)/1000, tz=datetime.timezone.utc)
     return unix_datetime > cutoff_datetime
 
+def save_tokens(db: sqlite3.Connection, table_name: str, access_token: str, refresh_token: str,
+                client_id: str, client_secret: str, token_uri: str):
+    """
+    Saves access and refresh tokens to the database.
+
+    Parameters:
+        - db (sqlite3.Connection): Represents a SQLite database connection.
+        - table_name (str): Database table containing credentials data
+        - access_token (str): Access token for Gmail API
+        - refresh_token (str): Refresh token used to refresh the access token for Gmail API.
+        - client_id (str): Client ID corresponding to access token credentials.
+        - client_secret (str): Client secret corresponding to access token credentials.
+        - token_uri (str): Token URI corresponding to access token credentials.
+    """
+    name = os.environ['NAME']
+    db.execute(
+        f'''
+        UPDATE {table_name}
+        SET access_token=?, refresh_token=?, client_id=?, client_secret=?, token_uri=?
+        WHERE name=?;
+        ''',
+        (access_token, refresh_token, client_id, client_secret, token_uri, name)
+    )
+
+def load_credentials(db: sqlite3.Connection, table_name: str):
+    """
+    Loads access and refresh tokens from the database as a Google credentials object.
+
+    Parameters:
+        - db (sqlite3.Connection): Represents a SQLite database connection.
+        - table_name (str): Database table containing credentials data
+    """
+    name = os.environ['NAME']
+    cursor = db.cursor()
+
+    cursor.execute(f'SELECT access_token, refresh_token, client_id, client_secret, token_uri FROM {table_name} WHERE name = ?', (name,))
+    row = cursor.fetchone()
+
+    if row:
+        access_token = row['access_token']
+        refresh_token = row['refresh_token']
+        client_id = row['client_id']
+        client_secret = row['client_secret']
+        token_uri = row['token_uri']
+        return Credentials(token=access_token, refresh_token=refresh_token,
+                           client_id=client_id, client_secret=client_secret,
+                           token_uri=token_uri, scopes=SCOPES)
+
+    return None
+
 def authenticate_gmail(db: sqlite3.Connection, table_name: str, credential_path: str) -> googleapiclient.discovery.Resource:
     """
     Authenticates the user and returns an instance of the Gmail API service.
@@ -84,7 +134,9 @@ def authenticate_gmail(db: sqlite3.Connection, table_name: str, credential_path:
             try:
                 creds.refresh(GoogleAuthRequest())
                 save_tokens(db=db, table_name='user_data',
-                            access_token=creds.token, refresh_token=creds.refresh_token)
+                            access_token=creds.token, refresh_token=creds.refresh_token,
+                            client_id=creds.client_id, client_secret=creds.client_secret,
+                            token_uri=creds.token_uri)
                 logger.info('Token refreshed successfully.')
             except RefreshError as e:
                 logger.warning('Error refreshing token, initiating new OAuth flow: %s', e)
@@ -429,47 +481,6 @@ def convert_unix_timestamp_to_date(unix_timestamp: str) -> str:
     """
     return datetime.datetime.fromtimestamp(int(unix_timestamp) / 1000).strftime('%Y-%m-%d')
 
-def save_tokens(db: sqlite3.Connection, table_name: str, access_token: str, refresh_token: str):
-    """
-    Saves access and refresh tokens to the database.
-
-    Parameters:
-        - db (sqlite3.Connection): Represents a SQLite database connection.
-        - table_name (str): Database table containing credentials data
-        - access_token (str): Access token for Gmail API
-        - refresh_token (str): Refresh token used to refresh the access token for Gmail API.
-    """
-    name = os.environ['NAME']
-    db.execute(
-        f'''
-        UPDATE {table_name}
-        SET access_token=?, refresh_token=?
-        WHERE name=?;
-        ''',
-        (access_token, refresh_token, name)
-    )
-
-def load_credentials(db: sqlite3.Connection, table_name: str):
-    """
-    Loads access and refresh tokens from the database as a Google credentials object.
-
-    Parameters:
-        - db (sqlite3.Connection): Represents a SQLite database connection.
-        - table_name (str): Database table containing credentials data
-    """
-    name = os.environ['NAME']
-    cursor = db.cursor()
-
-    cursor.execute(f'SELECT access_token, refresh_token FROM {table_name} WHERE name = ?', (name,))
-    row = cursor.fetchone()
-
-    if row:
-        access_token = row['access_token']
-        refresh_token = row['refresh_token']
-        return Credentials(token=access_token, refresh_token=refresh_token, scopes=SCOPES)
-
-    return None
-
 def create_transaction(db: sqlite3.Connection, transaction: Transaction) -> Optional[HTTPException]:
     """
     Writes a transaction to the transactions table in the SQLite database.
@@ -484,13 +495,13 @@ def create_transaction(db: sqlite3.Connection, transaction: Transaction) -> Opti
             db.execute(
                 '''
                 INSERT INTO transactions (transaction_id, transaction_date, merchant, bucket,
-                category, subcategory, account_name, is_recurring)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                amount, category, subcategory, account_name, is_recurring)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
                 ''',
                 (
                     transaction.transaction_id, transaction.transaction_date, transaction.merchant,
-                    transaction.bucket, transaction.category, transaction.subcategory, transaction.account_name,
-                    transaction.is_recurring
+                    transaction.bucket, transaction.amount, transaction.category, transaction.subcategory,
+                    transaction.account_name, transaction.is_recurring
                 )
             )
     except Exception as e:
