@@ -1,34 +1,34 @@
-name: Deploy Gmail WatcherCloud Function
+#name: Deploy Gmail WatcherCloud Function
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'cloud_functions/database_writer'
+#on:
+#  push:
+#    branches:
+#      - main
+#    paths:
+#      - 'cloud_functions/database_writer'
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+#    steps:
+#    - name: Checkout code
+#      uses: actions/checkout@v3
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
+#    - name: Set up Cloud SDK
+#      uses: google-github-actions/setup-gcloud@v1
+#      with:
+#        project_id: ${{ secrets.GCP_PROJECT_ID }}
+#        service_account_key: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Deploy Cloud Function
-      working-directory: ./cloud_functions/database_writer
-      run: |
-        gcloud functions deploy database_writer \
-          --runtime python312 \
-          --trigger-http \
-          --entry-point process_pubsub_trigger \
-          --region us-central1 \
-          --set-env-vars GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}, {VENMO_EMAIL=${{ vars.VENMO_EMAIL }}, AMEX_EMAIL=${{ vars.AMEX_EMAIL }}, CHASE_EMAIL=${{ vars.CHASE_EMAIL }}, CAPITALONE_EMAIL=${{ vars.CAPITALONE_EMAIL }}, WELLSFARGO_EMAIL=${{ vars.WELLSFARGO_EMAIL }} \
-          --timeout=540s \
-          --memory=512MB
+#    - name: Deploy Cloud Function
+#      working-directory: ./cloud_functions/database_writer
+#      run: |
+#        gcloud functions deploy database_writer \
+#          --runtime python312 \
+#          --trigger-http \
+#          --entry-point process_pubsub_trigger \
+#          --region us-central1 \
+#          --set-env-vars GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}, {VENMO_EMAIL=${{ vars.VENMO_EMAIL }}, AMEX_EMAIL=${{ vars.AMEX_EMAIL }}, CHASE_EMAIL=${{ vars.CHASE_EMAIL }}, CAPITALONE_EMAIL=${{ vars.CAPITALONE_EMAIL }}, WELLSFARGO_EMAIL=${{ vars.WELLSFARGO_EMAIL }} \
+#          --timeout=540s \
+#          --memory=512MB
