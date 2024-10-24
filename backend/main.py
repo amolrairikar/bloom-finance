@@ -2,12 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import init_db
-from routes import router
+#from routes import router
 
-# Initialize API and SQLite DB
+# Initialize API
 app = FastAPI()
-init_db()
-app.include_router(router)
+#app.include_router(router)
 
 # Add CORS middleware
 app.add_middleware(
@@ -17,3 +16,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# TODO: Clean up API code now that we have transitioned to an event-driven model
