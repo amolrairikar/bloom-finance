@@ -18,9 +18,11 @@ htmlcov
 # SQLite database
 database.db
 
-# Credential files
-oauth_client_secret.json
+# ADC file
 application_default_credentials.json
+
+# Temp OAuth generation function
+oauth_temp.py
 
 # Node modules
 node_modules
