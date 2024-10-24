@@ -18,11 +18,20 @@ htmlcov
 # SQLite database
 database.db
 
-# ADC file
-application_default_credentials.json
+# Credentials files
+creds/
 
 # Temp OAuth generation function
 oauth_temp.py
 
 # Node modules
 node_modules
+
+# Terraform
+.terraform
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+*.plan
+*.tfstate
+*.tfstate.backup
+*.tfvars
